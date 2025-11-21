@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page9 - Test Suite</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Courier New', monospace;
+      background: #000;
+      color: #00ff00;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    
+    .test-section {
+      background: #111;
+      border: 2px solid #00ff00;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    
+    .test-section h2 {
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      color: #00cc00;
+    }
+    
+    button {
+      background: #111;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      padding: 10px 20px;
+      margin: 5px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 1em;
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    
+    button:hover {
+      background: #00ff00;
+      color: #000;
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .result {
+      margin: 10px 0;
+      padding: 10px;
+      background: #000;
+      border-left: 3px solid #0099cc;
+      padding-left: 15px;
+    }
+    
+    .success {
+      border-left-color: #00ff00;
+      color: #00ff00;
+    }
+    
+    .error {
+      border-left-color: #ff0000;
+      color: #ff0000;
+    }
+    
+    .info {
+      border-left-color: #0099cc;
+      color: #0099cc;
+    }
+    
+    pre {
+      background: #000;
+      padding: 10px;
+      overflow-x: auto;
+      border-radius: 3px;
+    }
+    
+    .loading {
+      display: inline-block;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Page9 Test Suite</h1>
+    
+    <div class="test-section">
+      <h2>1. Kernel Tests</h2>
+      <button onclick="testKernelRegistration()">Test Kernel Registration</button>
+      <button onclick="testKernelStatus()">Test Kernel Status</button>
+      <button onclick="testConfigLoading()">Test Config Loading</button>
+      <div id="kernel-results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>2. Routing Tests</h2>
+      <button onclick="testBasicRoute()">Test Basic Route</button>
+      <button onclick="testStatusRoute()">Test Status Route</button>
+      <button onclick="testCaching()">Test Caching</button>
+      <div id="routing-results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>3. Worker Tests</h2>
+      <button onclick="testWorkerEcho()">Test Worker Echo</button>
+      <button onclick="testWorkerCompute()">Test Worker Compute</button>
+      <button onclick="testWorkerPool()">Test Worker Pool</button>
+      <div id="worker-results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>4. Namespace Tests</h2>
+      <button onclick="testNamespaceMount()">Test Namespace Mount</button>
+      <button onclick="testFileAccess()">Test File Access</button>
+      <div id="namespace-results"></div>
+    </div>
+    
+    <div class="test-section">
+      <h2>5. Integration Tests</h2>
+      <button onclick="runAllTests()">Run All Tests</button>
+      <button onclick="clearResults()">Clear Results</button>
+      <div id="integration-results"></div>
+    </div>
+  </div>
+
+  <script>
+    // Wait for Page9 to initialize
+    let page9Instance = null;
+    
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        if (window.page9) {
+          page9Instance = window.page9;
+          log('integration', 'Page9 initialized successfully', 'success');
+        } else {
+          log('integration', 'Page9 not found - loading page9.js', 'info');
+          const script = document.createElement('script');
+          script.src = '/page9.js';
+          script.onload = () => {
+            page9Instance = window.page9;
+            log('integration', 'Page9 loaded successfully', 'success');
+          };
+          document.head.appendChild(script);
+        }
+      }, 1000);
+    });
+    
+    function log(section, message, type = 'info') {
+      const resultsDiv = document.getElementById(`${section}-results`);
+      if (!resultsDiv) return;
+      
+      const resultDiv = document.createElement('div');
+      resultDiv.className = `result ${type}`;
+      resultDiv.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      resultsDiv.appendChild(resultDiv);
+      
+      // Auto-scroll
+      resultsDiv.scrollTop = resultsDiv.scrollHeight;
+    }
+    
+    // Kernel Tests
+    async function testKernelRegistration() {
+      log('kernel', 'Testing kernel registration...', 'info');
+      
+      try {
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration) {
+            log('kernel', '✓ Service Worker registered', 'success');
+            log('kernel', `  Scope: ${registration.scope}`, 'info');
+            return true;
+          } else {
+            log('kernel', '✗ Service Worker not registered', 'error');
+            return false;
+          }
+        } else {
+          log('kernel', '✗ Service Workers not supported', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('kernel', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testKernelStatus() {
+      log('kernel', 'Testing kernel status...', 'info');
+      
+      try {
+        if (!page9Instance) {
+          log('kernel', '✗ Page9 not initialized', 'error');
+          return false;
+        }
+        
+        const status = await page9Instance.getKernelStatus();
+        if (status.active) {
+          log('kernel', '✓ Kernel is active', 'success');
+          log('kernel', `  Version: ${status.version}`, 'info');
+          log('kernel', `  Strategy: ${status.config?.kernel?.cachingStrategy}`, 'info');
+          return true;
+        } else {
+          log('kernel', '✗ Kernel is not active', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('kernel', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testConfigLoading() {
+      log('kernel', 'Testing configuration loading...', 'info');
+      
+      try {
+        const response = await fetch('/page9.config.json');
+        if (response.ok) {
+          const config = await response.json();
+          log('kernel', '✓ Configuration loaded successfully', 'success');
+          log('kernel', `  Namespace root: ${config.namespace?.root}`, 'info');
+          log('kernel', `  Workers enabled: ${config.workers?.enabled}`, 'info');
+          return true;
+        } else {
+          log('kernel', '✗ Failed to load configuration', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('kernel', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    // Routing Tests
+    async function testBasicRoute() {
+      log('routing', 'Testing basic route...', 'info');
+      
+      try {
+        const response = await fetch('/');
+        if (response.ok) {
+          log('routing', '✓ Root route accessible', 'success');
+          log('routing', `  Status: ${response.status}`, 'info');
+          return true;
+        } else {
+          log('routing', `✗ Failed: ${response.status}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log('routing', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testStatusRoute() {
+      log('routing', 'Testing status route...', 'info');
+      
+      try {
+        const response = await fetch('/status.json');
+        if (response.ok) {
+          const data = await response.json();
+          log('routing', '✓ Status route accessible', 'success');
+          log('routing', `  Status: ${data.status}`, 'info');
+          log('routing', `  Backend: ${data.backend}`, 'info');
+          return true;
+        } else {
+          log('routing', `✗ Failed: ${response.status}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log('routing', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testCaching() {
+      log('routing', 'Testing caching strategy...', 'info');
+      
+      try {
+        const start = Date.now();
+        const response1 = await fetch('/status.json');
+        const time1 = Date.now() - start;
+        
+        const start2 = Date.now();
+        const response2 = await fetch('/status.json');
+        const time2 = Date.now() - start2;
+        
+        if (response1.ok && response2.ok) {
+          log('routing', '✓ Caching working', 'success');
+          log('routing', `  First request: ${time1}ms`, 'info');
+          log('routing', `  Second request: ${time2}ms`, 'info');
+          log('routing', `  Speedup: ${(time1 / time2).toFixed(2)}x`, 'info');
+          return true;
+        } else {
+          log('routing', '✗ Caching test failed', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('routing', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    // Worker Tests
+    async function testWorkerEcho() {
+      log('worker', 'Testing worker echo...', 'info');
+      
+      try {
+        if (!page9Instance) {
+          log('worker', '✗ Page9 not initialized', 'error');
+          return false;
+        }
+        
+        if (page9Instance.workerPool.length === 0) {
+          log('worker', '✗ No workers available', 'error');
+          return false;
+        }
+        
+        const worker = page9Instance.workerPool[0];
+        const testData = 'Hello, Page9!';
+        const result = await page9Instance.sendToWorker(worker.name, 'ECHO', testData);
+        
+        if (result.echo === testData) {
+          log('worker', '✓ Worker echo successful', 'success');
+          log('worker', `  Echo: ${result.echo}`, 'info');
+          return true;
+        } else {
+          log('worker', '✗ Echo mismatch', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('worker', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testWorkerCompute() {
+      log('worker', 'Testing worker computation...', 'info');
+      
+      try {
+        if (!page9Instance || page9Instance.workerPool.length === 0) {
+          log('worker', '✗ Workers not available', 'error');
+          return false;
+        }
+        
+        const worker = page9Instance.workerPool[0];
+        const result = await page9Instance.sendToWorker(worker.name, 'COMPUTE', { value: 21 });
+        
+        if (result === 42) {
+          log('worker', '✓ Worker computation successful', 'success');
+          log('worker', `  Result: ${result}`, 'info');
+          return true;
+        } else {
+          log('worker', `✗ Unexpected result: ${result}`, 'error');
+          return false;
+        }
+      } catch (error) {
+        log('worker', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testWorkerPool() {
+      log('worker', 'Testing worker pool...', 'info');
+      
+      try {
+        if (!page9Instance) {
+          log('worker', '✗ Page9 not initialized', 'error');
+          return false;
+        }
+        
+        const poolSize = page9Instance.workerPool.length;
+        log('worker', `✓ Worker pool size: ${poolSize}`, 'success');
+        
+        for (let i = 0; i < poolSize; i++) {
+          const worker = page9Instance.workerPool[i];
+          log('worker', `  Worker ${i}: ${worker.name}`, 'info');
+        }
+        
+        return poolSize > 0;
+      } catch (error) {
+        log('worker', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    // Namespace Tests
+    async function testNamespaceMount() {
+      log('namespace', 'Testing namespace mount...', 'info');
+      
+      try {
+        if (!page9Instance) {
+          log('namespace', '✗ Page9 not initialized', 'error');
+          return false;
+        }
+        
+        const config = page9Instance.config;
+        if (config.namespace?.mounts) {
+          log('namespace', `✓ Found ${config.namespace.mounts.length} mount points`, 'success');
+          config.namespace.mounts.forEach((mount, i) => {
+            log('namespace', `  Mount ${i}: ${mount.path} → ${mount.target}`, 'info');
+          });
+          return true;
+        } else {
+          log('namespace', '✗ No mounts configured', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('namespace', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testFileAccess() {
+      log('namespace', 'Testing file access...', 'info');
+      
+      try {
+        const response = await fetch('/status.json');
+        if (response.ok) {
+          const data = await response.json();
+          log('namespace', '✓ File access successful', 'success');
+          log('namespace', `  Philosophy: ${data.philosophy}`, 'info');
+          return true;
+        } else {
+          log('namespace', '✗ File access failed', 'error');
+          return false;
+        }
+      } catch (error) {
+        log('namespace', `✗ Error: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    // Integration Tests
+    async function runAllTests() {
+      log('integration', '========================================', 'info');
+      log('integration', 'Running all tests...', 'info');
+      log('integration', '========================================', 'info');
+      
+      const tests = [
+        { name: 'Kernel Registration', fn: testKernelRegistration },
+        { name: 'Kernel Status', fn: testKernelStatus },
+        { name: 'Config Loading', fn: testConfigLoading },
+        { name: 'Basic Route', fn: testBasicRoute },
+        { name: 'Status Route', fn: testStatusRoute },
+        { name: 'Caching', fn: testCaching },
+        { name: 'Worker Echo', fn: testWorkerEcho },
+        { name: 'Worker Compute', fn: testWorkerCompute },
+        { name: 'Worker Pool', fn: testWorkerPool },
+        { name: 'Namespace Mount', fn: testNamespaceMount },
+        { name: 'File Access', fn: testFileAccess }
+      ];
+      
+      let passed = 0;
+      let failed = 0;
+      
+      for (const test of tests) {
+        try {
+          const result = await test.fn();
+          if (result) {
+            passed++;
+          } else {
+            failed++;
+          }
+          // Small delay between tests
+          await new Promise(resolve => setTimeout(resolve, 100));
+        } catch (error) {
+          failed++;
+          log('integration', `${test.name}: ${error.message}`, 'error');
+        }
+      }
+      
+      log('integration', '========================================', 'info');
+      log('integration', `Tests complete: ${passed} passed, ${failed} failed`, passed === tests.length ? 'success' : 'error');
+      log('integration', '========================================', 'info');
+    }
+    
+    function clearResults() {
+      const sections = ['kernel', 'routing', 'worker', 'namespace', 'integration'];
+      sections.forEach(section => {
+        const resultsDiv = document.getElementById(`${section}-results`);
+        if (resultsDiv) {
+          resultsDiv.innerHTML = '';
+        }
+      });
+    }
+  </script>
+</body>
+</html>
