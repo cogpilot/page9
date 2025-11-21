@@ -1,0 +1,9 @@
+{
+  "status": "operational",
+  "kernel": {
+    "version": "0.1.0",
+    "uptime": "runtime"
+  },
+  "philosophy": "everything is a file",
+  "backend": "none - fully static"
+}
