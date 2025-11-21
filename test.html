@@ -370,14 +370,16 @@
         }
         
         const worker = page9Instance.workerPool[0];
+        // Test the inline worker's COMPUTE operation: value * 2
+        // Input: 21, Expected output: 42
         const result = await page9Instance.sendToWorker(worker.name, 'COMPUTE', { value: 21 });
         
         if (result === 42) {
           log('worker', '✓ Worker computation successful', 'success');
-          log('worker', `  Result: ${result}`, 'info');
+          log('worker', `  Input: 21, Result: ${result} (21 * 2)`, 'info');
           return true;
         } else {
-          log('worker', `✗ Unexpected result: ${result}`, 'error');
+          log('worker', `✗ Unexpected result: ${result} (expected 42)`, 'error');
           return false;
         }
       } catch (error) {
