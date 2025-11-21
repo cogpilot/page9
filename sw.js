@@ -180,12 +180,13 @@ function matchRoute(pathname) {
 
 /**
  * Simple Pattern Matching
+ * Escapes all special regex characters to prevent injection
  */
 function matchPattern(pathname, pattern) {
-  // Convert pattern to regex (simple implementation)
+  // Escape all regex special characters except * (which we want to use as wildcard)
   const regexPattern = pattern
-    .replace(/\*/g, '.*')
-    .replace(/\//g, '\\/');
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // Escape special chars including backslash
+    .replace(/\*/g, '.*');                   // Then convert * to .*
   const regex = new RegExp(`^${regexPattern}$`);
   return regex.test(pathname);
 }
