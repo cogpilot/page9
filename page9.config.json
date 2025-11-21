@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Page9 Configuration",
+  "description": "Configuration file for Page9 - Plan9 philosophy applied to GitHub Pages",
+  "type": "object",
+  "properties": {
+    "namespace": {
+      "type": "object",
+      "description": "Namespace configuration - Plan9 style file mounting",
+      "properties": {
+        "root": {
+          "type": "string",
+          "description": "Root path for the namespace",
+          "default": "/"
+        },
+        "mounts": {
+          "type": "array",
+          "description": "Mount points for files and resources",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Virtual mount path"
+              },
+              "target": {
+                "type": "string",
+                "description": "Actual file or directory path"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["file", "dir", "synthetic"],
+                "description": "Type of mount"
+              }
+            },
+            "required": ["path", "target", "type"]
+          }
+        }
+      }
+    },
+    "kernel": {
+      "type": "object",
+      "description": "Service Worker kernel configuration",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Kernel version"
+        },
+        "cachingStrategy": {
+          "type": "string",
+          "enum": ["network-first", "cache-first", "stale-while-revalidate"],
+          "default": "cache-first"
+        },
+        "interceptPatterns": {
+          "type": "array",
+          "description": "URL patterns to intercept",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "workers": {
+      "type": "object",
+      "description": "Web Worker configuration for process isolation",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "pool": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "number",
+              "default": 1
+            },
+            "max": {
+              "type": "number",
+              "default": 4
+            }
+          }
+        },
+        "modules": {
+          "type": "array",
+          "description": "Worker modules to load",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["module", "classic"],
+                "default": "module"
+              }
+            }
+          }
+        }
+      }
+    },
+    "routes": {
+      "type": "object",
+      "description": "File-based routing configuration",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string"
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "transform": {
+            "type": "string",
+            "description": "Optional worker to transform response"
+          }
+        }
+      }
+    }
+  }
+}
